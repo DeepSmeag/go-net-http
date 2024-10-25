@@ -45,7 +45,21 @@ Following [this video](https://www.youtube.com/watch?v=H7tbjKFSg58) to understan
   - some underlying details I don't like here is that adding to the context (and the request by extension) creates new objects, so we're talking about some lost performance; the type-unsafe way of adding data to the context is also weird, since have the code to tell us what type the value is, and we also have the "value, ok" mechanism to tell us if there's something there or not
 - (not a thing related to net/http, but Go) - auto-restart /watching for code changes; Nodejs has --watch and before this there was nodemon; there's plenty of options I've seen on a quick search; doesn't look like there's an industry standard; air looks nice
 
-### Conclusion / overall
+### Conclusion / thoughts overall
 
-- based on my experience with Express, here's a list of features any reasonable project would need (there may be more, I'm not an expert):
-  - todo
+- based on my experience with Express, here's a list of features any reasonable project would need (as far as my experience takes me) and a checkmark if net/http has it or not + a blue square if there's a bit more boilerplate involved:
+  - route handling ✅
+  - method-based routing ✅
+  - query parameters handling ✅
+  - path parameters handling ✅
+  - middleware & chaining ✅ 🟦
+  - subrouting ✅ 🟦
+  - cookie handling ✅
+  - testing? - not sure what Go offers for this;
+- I haven't included context cause I'd say it's not necessarily web-specific
+- an important mention is that the JS ecosystem in general relies on 3rd party packages, while net/http is part of the standard library of Go; so we're as feature-rich as possible
+- validation, session handling, database communication etc. in Nodejs are done through 3rd party packages unless you're insane; so I can't speak for Go being inferior because it doesn't have a validation package or anything; validation is just a middleware with specific functionality after all, so it's implementable; same with session and everything else
+- so the overall vibe of Go is that everything is more barebones, we get the basic tools and it's our job to choose separate packages or build our own tools; in Js/Nodejs we rely on 3rd part packages for everything cause there is something available for everything and they're good; in Go, the situation is inconclusive (to me at least, for now)
+- what I can say for sure is that DX is faster with JS and its frameworks; the tradeoff is performance, Go is way faster at CPU-intensive tasks; if we're talking about simple, IO-bound tasks, I'd say forget Go (unless you know it well cause then you waste time learning Express when you could be building)
+- as for the starting question of net/http vs frameworks, I'd say it comes down to performance and DX; performance is supposed to be better on net/http since it's the barebones thing frameworks build upon, though I see Fiber prides itself with an up to 10x better performance and it has better DX (I'm biased due to Express); so I'd go with that unless I have specific situations where only net/http works
+- if we're talking about feature completeness, net/http is there; everything else can be built upon it with relatively-low boilerplate overhead; so my answer is _yes_, net/http is enough for most if not all web server needs; the question now is project and person-specific: is net/http or a framework like Fiber better for my (team's) situation?
