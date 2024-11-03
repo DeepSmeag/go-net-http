@@ -1,7 +1,10 @@
 # Exploring net/http package in Go to build web servers. Is it enough, or do we need frameworks?
 
 And how easy is it to use? Does it require a lot of boilerplate?  
-Following [this video](https://www.youtube.com/watch?v=H7tbjKFSg58) to understand new features; if net/http ends up being as feature rich as Express, I call no need for frameworks. I have another repo where I'm following an in-depth Express framework tutorial and go over all important features
+Following [this video](https://www.youtube.com/watch?v=H7tbjKFSg58) to understand new features; if net/http ends up being as feature rich as Express, I call no need for frameworks. I have another repo where I'm following an in-depth Express framework tutorial and go over all important features.
+
+Also doing some experimenting with TCP/UDP/QUIC and HTTP/2.0, 3.0 in Go, over in cmd/[tcp/udp/quic?]/main.go
+Implementing a guess-the-number game with client-server. Notes (requirements and learning) at the bottom.
 
 ### Perspective from which this project is written
 
@@ -63,3 +66,22 @@ Following [this video](https://www.youtube.com/watch?v=H7tbjKFSg58) to understan
 - what I can say for sure is that DX is faster with JS and its frameworks; the tradeoff is performance, Go is way faster at CPU-intensive tasks; if we're talking about simple, IO-bound tasks, I'd say forget Go (unless you know it well cause then you waste time learning Express when you could be building)
 - as for the starting question of net/http vs frameworks, I'd say it comes down to performance and DX; performance is supposed to be better on net/http since it's the barebones thing frameworks build upon, though I see Fiber prides itself with an up to 10x better performance and it has better DX (I'm biased due to Express); so I'd go with that unless I have specific situations where only net/http works
 - if we're talking about feature completeness, net/http is there; everything else can be built upon it with relatively-low boilerplate overhead; so my answer is _yes_, net/http is enough for most if not all web server needs; the question now is project and person-specific: is net/http or a framework like Fiber better for my (team's) situation?
+
+## Guess the number - TCP/UDP/QUIC?
+
+- Requirement: client-server architecture handling multiple clients at the same time (concurrency); when the server starts, a random number 1-10 is chosen; clients connect to the server and try to guess the number; the server responds with "too high", "too low", "correct!"; when a client guesses the number, the server changes it and announces it to each client; when a client guesses correctly (receives "correct!"), it ends its execution
+- HTTP is built on top of TCP/IP; with HTTP/3.0, it's now using another protocol called QUIC, built on top of UDP for its speed but borrowing the assurance of TCP
+- TCP works by establishing a (secure if TLS) connection and using that to send data back; depends on version of HTTP being used, nowadays it's 2.0; not sure if I can force HTTP/1.1 with stdlib; this ensures the packet makes it back to the client
+- with UDP there's no proper connection being established; there's no guarantee the packet makes it; packets are mostly lost when the network (or CPU in a local experiment) is busy
+- !**INTERESTING FIND**: []byte of size 1024 (so 1024 byte slice) when converted to string via simple string(byteslice) will still keep its zero-valued part; if I try to do strconv.Atoi on that, I get an error; so make sure in the case of reading from connections into a buffer and then trying to convert that to only keep what's needed in the string part; sneaky bug right there, not obvious because we assume string(slice) only keeps what's needed due to it being the simplest way of converting []byte to string; alternative is fmt.Sprintf("%s",byteslice[:num]), but it still requires the limitation of bytes to be moved into the string; so either way string(...) is the easiest way of converting []byte into string
+- rather tough to simulate & stress test simultaneous clients sending guesses; the code looks like it should handle things as intended; to test things out thoroughly, I should automate the sending process with random number guesses and automate the client starting with a bash script / goroutines; goroutines are easier
+
+  - there's no deadlock with 100 clients and we know for sure due to the rwMutex that client responses are not stale
+  - testing with 1000 clients introduces some dropped communication; doesn't seem to be due to deadlock, although Go does announce it as that; it seems to be just dropped packets due to overusage, since the server continues functioning
+  - to test this, we can let the server expect a fixed number of clients; if at the end the server finishes, we know it's a package drop thing due to CPU usage
+  - this testing leads to the actual answer - there is some deadlock; the server does not correctly close after accepting 1000 clients; is it due to all of them attempting near-simultaneous connection?
+  - bug discovered, we weren't waiting for the goroutines to end on the server; introducng a WaitGroup and some mutex-covered counters for handled clients reveals clean handling at 10k clients with 1ms delay
+  - yet having no delay, even if we use DialTimeout and allow 1s for the TCP connection to be established, the server misses a lot (9997 in one case) of clients; given the delay solves this issue, the root cause can be concluded as the server not being able to simultaneously listen to all clients;
+  - (rookie mistake) printing the error reveals the issue; the connection is dropped by the server after accepting the client; so it's not able to hold thousands of connexions simultaneously; having the delay simply means we constantly clear out some requests to make way for others
+
+- UDP:
