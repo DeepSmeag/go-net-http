@@ -4,12 +4,13 @@ import (
 	"context"
 	"crypto/tls"
 	"log"
-	"time"
+	"sync"
 
 	quic "github.com/quic-go/quic-go"
 )
 
-func main() {
+func startClient(wg *sync.WaitGroup) {
+	defer wg.Done()
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: true, // testing only
 		NextProtos:         []string{"h3", "http/1.1"},
@@ -35,6 +36,17 @@ func main() {
 	}
 	greeting := string(data[:num])
 	log.Println("Client: received", greeting)
-	stream.Write([]byte("Hello to you as well"))
-	time.Sleep(time.Millisecond) // if we don't have this here, the stream gets closed before the write gets a chance to flush the buffer to network so the server receives something
+	// num, err = stream.Write([]byte("Hello to you as well"))
+	// if err != nil {
+	// 	log.Println("Client: Could not write the greeting")
+	// }
+	// time.Sleep(time.Microsecond * 100) // if we don't have this here, the stream gets closed before the write gets a chance to flush the buffer to network so the server receives something
+}
+
+func main() {
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go startClient(&wg)
+	log.Println("Started goroutine")
+	wg.Wait()
 }

@@ -87,11 +87,11 @@ func handleConnection(conn quic.Connection, wg *sync.WaitGroup) {
 	log.Println("Server: opened stream")
 	defer stream.Close()
 	stream.Write([]byte("Hey there sir"))
-	data := make([]byte, 1024)
-	num, err := stream.Read(data)
-	if err != nil {
-		log.Println("Server: Could not read from stream of client ", conn.LocalAddr().String())
-	}
-	guess := string(data[:num])
-	log.Println("Server: received", guess)
+	// data := make([]byte, 1024)
+	// num, err := stream.Read(data)
+	// if err != nil {
+	// 	log.Println("Server: Could not read from stream of client ", conn.LocalAddr().String())
+	// }
+	// guess := string(data[:num])
+	// log.Println("Server: received", guess)
 }
