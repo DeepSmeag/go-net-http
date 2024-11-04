@@ -24,13 +24,16 @@ func startClient(wg *sync.WaitGroup) {
 	defer conn.Close()
 	data := make([]byte, 1024)
 	fmt.Println("Client: connected to server")
-	for true {
+	attempts := 0
+	for attempts < 5 {
 		guess := strconv.Itoa(rand.Intn(11))
+
 		conn.Write([]byte(guess))
+		conn.SetReadDeadline(time.Now().Add(time.Second))
 		num, err := conn.Read(data)
 		if err != nil {
-			log.Println("Client: error on reading data from server", err)
-			return
+			log.Println("Client: error on reading data from server or timeout:", err)
+
 		}
 		rec := string(data[:num])
 		// log.Println("Client: got response from server:", rec)
@@ -41,6 +44,7 @@ func startClient(wg *sync.WaitGroup) {
 			mut.Unlock()
 			return
 		}
+
 	}
 }
 
@@ -56,7 +60,7 @@ func main() {
 	for i := 0; i < numClients; i++ {
 		wg.Add(1)
 		go startClient(&wg)
-		time.Sleep(time.Millisecond * 1)
+		// time.Sleep(time.Millisecond * 1)
 	}
 	wg.Wait()
 
