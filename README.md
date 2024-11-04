@@ -3,7 +3,7 @@
 And how easy is it to use? Does it require a lot of boilerplate?  
 Following [this video](https://www.youtube.com/watch?v=H7tbjKFSg58) to understand new features; if net/http ends up being as feature rich as Express, I call no need for frameworks. I have another repo where I'm following an in-depth Express framework tutorial and go over all important features.
 
-Also doing some experimenting with TCP/UDP/QUIC and HTTP/2.0, 3.0 in Go, over in cmd/[tcp/udp/quic?]/main.go
+[Jump down to it](#guess-the-number---tcpudpquic)Also doing some experimenting with TCP/UDP/QUIC and HTTP/2.0, 3.0 in Go, over in cmd/[tcp/udp/quic?]/main.go
 Implementing a guess-the-number game with client-server. Notes (requirements and learning) at the bottom.
 
 ### Perspective from which this project is written
@@ -73,7 +73,7 @@ Implementing a guess-the-number game with client-server. Notes (requirements and
 - HTTP is built on top of TCP/IP; with HTTP/3.0, it's now using another protocol called QUIC, built on top of UDP for its speed but borrowing the assurance of TCP
 - TCP works by establishing a (secure if TLS) connection and using that to send data back; depends on version of HTTP being used, nowadays it's 2.0; not sure if I can force HTTP/1.1 with stdlib; this ensures the packet makes it back to the client
 - with UDP there's no proper connection being established; there's no guarantee the packet makes it; packets are mostly lost when the network (or CPU in a local experiment) is busy
-- !**INTERESTING FIND**: []byte of size 1024 (so 1024 byte slice) when converted to string via simple string(byteslice) will still keep its zero-valued part; if I try to do strconv.Atoi on that, I get an error; so make sure in the case of reading from connections into a buffer and then trying to convert that to only keep what's needed in the string part; sneaky bug right there, not obvious because we assume string(slice) only keeps what's needed due to it being the simplest way of converting []byte to string; alternative is fmt.Sprintf("%s",byteslice[:num]), but it still requires the limitation of bytes to be moved into the string; so either way string(...) is the easiest way of converting []byte into string
+- !**INTERESTING FIND**: []byte of size 1024 (so 1024 byte slice) when converted to string via simple string(byteslice) will still keep its zero-valued part; if I try to do strconv.Atoi on that, I get an error; so make sure in the case of reading from connections into a buffer and then trying to convert that to only keep what's needed in the string part (so string(byteslice[:num])); sneaky bug right there, not obvious because we assume string(slice) only keeps what's needed due to it being the simplest way of converting []byte to string; alternative is fmt.Sprintf("%s",byteslice[:num]), but it still requires the limitation of bytes to be moved into the string; so either way string(...) is the easiest way of converting []byte into string
 - rather tough to simulate & stress test simultaneous clients sending guesses; the code looks like it should handle things as intended; to test things out thoroughly, I should automate the sending process with random number guesses and automate the client starting with a bash script / goroutines; goroutines are easier
 
   - there's no deadlock with 100 clients and we know for sure due to the rwMutex that client responses are not stale
