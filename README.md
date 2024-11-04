@@ -73,6 +73,7 @@ Implementing a guess-the-number game with client-server. Notes (requirements and
 
 - [https://ops.tips/blog/udp-client-and-server-in-go/](https://ops.tips/blog/udp-client-and-server-in-go/) - this one feels in-depth and advanced
 - [https://okanexe.medium.com/the-complete-guide-to-tcp-ip-connections-in-golang-1216dae27b5a](https://okanexe.medium.com/the-complete-guide-to-tcp-ip-connections-in-golang-1216dae27b5a)
+- [https://quic-go.net/docs/](https://quic-go.net/docs/)
 
 - Requirement: client-server architecture handling multiple clients at the same time (concurrency); when the server starts, a random number 1-10 is chosen; clients connect to the server and try to guess the number; the server responds with "too high", "too low", "correct!"; when a client guesses the number, the server changes it and prints an informative message to the log; when a client guesses correctly (receives "correct!"), it ends its execution
 - HTTP is built on top of TCP/IP; with HTTP/3.0, it's now using another protocol called QUIC, built on top of UDP for its speed but borrowing the assurance of TCP
@@ -105,3 +106,7 @@ Implementing a guess-the-number game with client-server. Notes (requirements and
 
 - what can we learn from this TCP/UDP situation? TCP ensures communication makes it to its destination, but sometimes connections drop so we need to reconnect; this happens in high-traffic situations; UDP does not ensure communication makes it, so we need to resend packets sometimes; overall, for one-directional communication UDP is likely the best candidate; this covers situations in which we send update, rather than requests; TCP is the better option when we expect responses, but we need to watch out for connection reset/timeout; there's a reason HTTP was built on top of TCP and not UDP
 - these past few years, QUIC has been introduced and it is tightly coupled with HTTP 3.0; there is a library in Go supporting HTTP 3.0 and QUIC packets; let's explore that as well
+  - using the quic-go package; it has docs to guide us a bit and we can also find information online; it's not official, looks like the standard library implementation of QUIC and HTTP 3.0 is still underway
+  - based on the information in the docs and the [stackoverflow post here](https://stackoverflow.com/questions/77553334/why-is-this-toy-go-quic-server-accepting-connections-but-not-streams-when-the-q) it looks like we are able to establish our QUIC connection
+  - !**IMPORTANT MENTION** the one who opens the stream is the one who must write first; in our case, the client establishes the connection and sends the guess, so it must open the bidirectional stream; QUIC allows for multiple streams over the same connection, so technically we could play guess-the-game over a single connection for multiple client goroutines (I guess it wouldn't work with 10k instances though)
+  - as a small greeting test, the server opens the stream and sends a mesage to the client first; this is in the commit **commit**, called ""
