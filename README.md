@@ -3,7 +3,7 @@
 And how easy is it to use? Does it require a lot of boilerplate?  
 Following [this video](https://www.youtube.com/watch?v=H7tbjKFSg58) to understand new features; if net/http ends up being as feature rich as Express, I call no need for frameworks. I have another repo where I'm following an in-depth Express framework tutorial and go over all important features.
 
-[Jump down to it](#guess-the-number---tcpudpquic)Also doing some experimenting with TCP/UDP/QUIC and HTTP/2.0, 3.0 in Go, over in cmd/[tcp/udp/quic?]/main.go
+[Jump down to it](#guess-the-number---tcpudpquic) Also doing some experimenting with TCP/UDP/QUIC and HTTP/2.0, 3.0 in Go, over in cmd/[tcp/udp/quic?]/main.go
 Implementing a guess-the-number game with client-server. Notes (requirements and learning) at the bottom.
 
 ### Perspective from which this project is written
