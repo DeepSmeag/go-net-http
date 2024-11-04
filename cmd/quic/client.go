@@ -28,18 +28,22 @@ func startClient(wg *sync.WaitGroup) {
 	if err != nil {
 		log.Fatal("Client: Could not open stream sync")
 	}
-	defer stream.Close()
+
 	data := make([]byte, 1024)
 	num, err := stream.Read(data)
 	if err != nil {
-		log.Println("Could not read from stream")
+		log.Println("Could not read from stream", err)
 	}
+	stream.Close()
 	greeting := string(data[:num])
 	log.Println("Client: received", greeting)
-	// num, err = stream.Write([]byte("Hello to you as well"))
-	// if err != nil {
-	// 	log.Println("Client: Could not write the greeting")
-	// }
+	writeStream, err := conn.OpenUniStreamSync(context.Background())
+	num, err = writeStream.Write([]byte("Hello to you as well"))
+	writeStream.Close()
+	if err != nil {
+		log.Println("Client: Could not write the greeting", err)
+	}
+	log.Println("Client: wrote message with bytes:", num)
 	// time.Sleep(time.Microsecond * 100) // if we don't have this here, the stream gets closed before the write gets a chance to flush the buffer to network so the server receives something
 }
 

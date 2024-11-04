@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Counter</title>
+</head>
+<body style="display: flex; flex-direction: column; gap: 10px;">
+  <h1>Counter</h1>
+  <p id="counter">0</p>
+  <button onclick="incrementCounter()">Increment</button>
+
+  <script>
+    function incrementCounter() {
+      var counterElement = document.getElementById('counter');
+      var currentCount = parseInt(counterElement.innerText);
+      counterElement.innerText = currentCount + 1;
+    }
+  </script>
+</body>
+</html>
