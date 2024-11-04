@@ -69,6 +69,11 @@ Implementing a guess-the-number game with client-server. Notes (requirements and
 
 ## Guess the number - TCP/UDP/QUIC?
 
+-- Resources:
+
+- [https://ops.tips/blog/udp-client-and-server-in-go/](https://ops.tips/blog/udp-client-and-server-in-go/) - this one feels in-depth and advanced
+- [https://okanexe.medium.com/the-complete-guide-to-tcp-ip-connections-in-golang-1216dae27b5a](https://okanexe.medium.com/the-complete-guide-to-tcp-ip-connections-in-golang-1216dae27b5a)
+
 - Requirement: client-server architecture handling multiple clients at the same time (concurrency); when the server starts, a random number 1-10 is chosen; clients connect to the server and try to guess the number; the server responds with "too high", "too low", "correct!"; when a client guesses the number, the server changes it and announces it to each client; when a client guesses correctly (receives "correct!"), it ends its execution
 - HTTP is built on top of TCP/IP; with HTTP/3.0, it's now using another protocol called QUIC, built on top of UDP for its speed but borrowing the assurance of TCP
 - TCP works by establishing a (secure if TLS) connection and using that to send data back; depends on version of HTTP being used, nowadays it's 2.0; not sure if I can force HTTP/1.1 with stdlib; this ensures the packet makes it back to the client
@@ -84,4 +89,6 @@ Implementing a guess-the-number game with client-server. Notes (requirements and
   - yet having no delay, even if we use DialTimeout and allow 1s for the TCP connection to be established, the server misses a lot (9997 in one case) of clients; given the delay solves this issue, the root cause can be concluded as the server not being able to simultaneously listen to all clients;
   - (rookie mistake) printing the error reveals the issue; the connection is dropped by the server after accepting the client; so it's not able to hold thousands of connexions simultaneously; having the delay simply means we constantly clear out some requests to make way for others
 
-- UDP:
+- UDP: since UDP doesn't work by establishing connections, we essentially send one-off packets to the server; the response comes by using the sender's address to know where to send the packet to;
+  - we'll see if many concurrent clients cause packet loss and we'll devise a way to retry sending packets to ensure eventual responses come
+  - !**INTERESTING FIND**: using waitgroups - if we give the responsibility of marking a goroutine as waitable via wg.Add(n) to the goroutine, the main thread has a big chance of passing by the wg.Wait() call and so the goroutine(s) never get waited on; so it's a pattern to always add to the waitgroup in the main thread to ensure waitability
